@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 
 """
-🦥 Starter Script for Fine-Tuning FastLanguageModel with Unsloth
+🦥 Unsloth ile FastLanguageModel'i ince ayar yapmak için başlangıç betiği
 
-This script is designed as a starting point for fine-tuning your models using unsloth.
-It includes configurable options for model loading, PEFT parameters, training arguments, 
-and model saving/pushing functionalities.
+Bu betik, modellerinizi unsloth kullanarak ince ayar yapmak için başlangıç noktası olarak tasarlanmıştır.
+Model yükleme, PEFT parametreleri, eğitim argümanları ve modeli kaydetme/gönderme işlevleri gibi yapılandırılabilir seçenekler içerir.
 
-You will likely want to customize this script to suit your specific use case 
-and requirements.
+Kendi kullanım senaryonuza ve gereksinimlerinize uygun olacak şekilde bu betiği özelleştirmek isteyebilirsiniz.
 
-Here are a few suggestions for customization:
-    - Modify the dataset loading and preprocessing steps to match your data.
-    - Customize the model saving and pushing configurations.
+Özelleştirme için birkaç öneri:
+    - Veri kümesi yükleme ve ön işleme adımlarını verilerinize uyacak şekilde değiştirin.
+    - Modeli kaydetme ve gönderme yapılandırmalarını kişiselleştirin.
 
-Usage: (most of the options have valid default values this is an extended example for demonstration purposes)
+Kullanım: (seçeneklerin çoğu geçerli varsayılan değerlere sahiptir, bu uzun bir örnektir)
     python unsloth-cli.py --model_name "unsloth/llama-3-8b" --max_seq_length 8192 --dtype None --load_in_4bit \
     --r 64 --lora_alpha 32 --lora_dropout 0.1 --bias "none" --use_gradient_checkpointing "unsloth" \
     --random_state 3407 --use_rslora --per_device_train_batch_size 4 --gradient_accumulation_steps 8 \
@@ -23,10 +21,10 @@ Usage: (most of the options have valid default values this is an extended exampl
     --report_to "tensorboard" --save_model --save_path "model" --quantization_method "f16" \
     --push_model --hub_path "hf/model" --hub_token "your_hf_token"
 
-To see a full list of configurable options, use:
+Tüm yapılandırılabilir seçenekleri görmek için:
     python unsloth-cli.py --help
 
-Happy fine-tuning!
+İyi ince ayarlar!
 """
 
 import argparse
@@ -97,7 +95,7 @@ def run(args):
         # Load and format dataset
         dataset = load_dataset(args.dataset, split="train")
     dataset = dataset.map(formatting_prompts_func, batched=True)
-    print("Data is formatted and ready!")
+    print("Veriler biçimlendirildi ve hazır!")
 
     # Configure training arguments
     training_args = TrainingArguments(
@@ -138,7 +136,7 @@ def run(args):
         if args.save_gguf:
             if isinstance(args.quantization, list):
                 for quantization_method in args.quantization:
-                    print(f"Saving model with quantization method: {quantization_method}")
+                    print(f"Model {quantization_method} ile miktarlandırılarak kaydediliyor")
                     model.save_pretrained_gguf(
                         args.save_path,
                         tokenizer,
@@ -151,7 +149,7 @@ def run(args):
                             quantization_method=quantization_method,
                         )
             else:
-                print(f"Saving model with quantization method: {args.quantization}")
+                print(f"Model {args.quantization} ile miktarlandırılarak kaydediliyor")
                 model.save_pretrained_gguf(args.save_path, tokenizer, quantization_method=args.quantization)
                 if args.push_model:
                     model.push_to_hub_gguf(
@@ -164,66 +162,66 @@ def run(args):
             if args.push_model:
                 model.push_to_hub_merged(args.save_path, tokenizer, args.hub_token)
     else:
-        print("Warning: The model is not saved!")
+        print("Uyarı: Model kaydedilmedi!")
 
 
 if __name__ == "__main__":
 
     # Define argument parser
-    parser = argparse.ArgumentParser(description="🦥 Fine-tune your llm faster using unsloth!")
+    parser = argparse.ArgumentParser(description="🦥 Unsloth ile LLM'inizi daha hızlı ince ayar yapın!")
 
-    model_group = parser.add_argument_group("🤖 Model Options")
-    model_group.add_argument('--model_name', type=str, default="unsloth/llama-3-8b", help="Model name to load")
-    model_group.add_argument('--max_seq_length', type=int, default=2048, help="Maximum sequence length, default is 2048. We auto support RoPE Scaling internally!")
-    model_group.add_argument('--dtype', type=str, default=None, help="Data type for model (None for auto detection)")
-    model_group.add_argument('--load_in_4bit', action='store_true', help="Use 4bit quantization to reduce memory usage")
-    model_group.add_argument('--dataset', type=str, default="yahma/alpaca-cleaned", help="Huggingface dataset to use for training")
+    model_group = parser.add_argument_group("🤖 Model Seçenekleri")
+    model_group.add_argument('--model_name', type=str, default="unsloth/llama-3-8b", help="Yüklenecek model adı")
+    model_group.add_argument('--max_seq_length', type=int, default=2048, help="Maksimum dizi uzunluğu, varsayılan 2048. Dahili olarak RoPE Ölçeklendirmesini otomatik destekliyoruz!")
+    model_group.add_argument('--dtype', type=str, default=None, help="Model için veri tipi (otomatik algılama için None)")
+    model_group.add_argument('--load_in_4bit', action='store_true', help="Bellek kullanımını azaltmak için 4 bit miktarlandırma kullan")
+    model_group.add_argument('--dataset', type=str, default="yahma/alpaca-cleaned", help="Eğitim için kullanılacak Huggingface veri kümesi")
 
-    lora_group = parser.add_argument_group("🧠 LoRA Options", "These options are used to configure the LoRA model.")
-    lora_group.add_argument('--r', type=int, default=16, help="Rank for Lora model, default is 16.  (common values: 8, 16, 32, 64, 128)")
-    lora_group.add_argument('--lora_alpha', type=int, default=16, help="LoRA alpha parameter, default is 16. (common values: 8, 16, 32, 64, 128)")
-    lora_group.add_argument('--lora_dropout', type=float, default=0, help="LoRA dropout rate, default is 0.0 which is optimized.")
-    lora_group.add_argument('--bias', type=str, default="none", help="Bias setting for LoRA")
-    lora_group.add_argument('--use_gradient_checkpointing', type=str, default="unsloth", help="Use gradient checkpointing")
-    lora_group.add_argument('--random_state', type=int, default=3407, help="Random state for reproducibility, default is 3407.")
-    lora_group.add_argument('--use_rslora', action='store_true', help="Use rank stabilized LoRA")
-    lora_group.add_argument('--loftq_config', type=str, default=None, help="Configuration for LoftQ")
+    lora_group = parser.add_argument_group("🧠 LoRA Seçenekleri", "LoRA modelini yapılandırmak için kullanılır.")
+    lora_group.add_argument('--r', type=int, default=16, help="LoRA modeli için derece, varsayılan 16 (yaygın değerler: 8, 16, 32, 64, 128)")
+    lora_group.add_argument('--lora_alpha', type=int, default=16, help="LoRA alpha parametresi, varsayılan 16 (yaygın değerler: 8, 16, 32, 64, 128)")
+    lora_group.add_argument('--lora_dropout', type=float, default=0, help="LoRA dropout oranı, varsayılan 0.0 olup optimize edilmiştir")
+    lora_group.add_argument('--bias', type=str, default="none", help="LoRA için bias ayarı")
+    lora_group.add_argument('--use_gradient_checkpointing', type=str, default="unsloth", help="Gradient checkpointing kullan")
+    lora_group.add_argument('--random_state', type=int, default=3407, help="Tekrarlanabilirlik için rastgele durum, varsayılan 3407")
+    lora_group.add_argument('--use_rslora', action='store_true', help="Sıra stabilize LoRA kullan")
+    lora_group.add_argument('--loftq_config', type=str, default=None, help="LoftQ yapılandırması")
 
    
-    training_group = parser.add_argument_group("🎓 Training Options")
-    training_group.add_argument('--per_device_train_batch_size', type=int, default=2, help="Batch size per device during training, default is 2.")
-    training_group.add_argument('--gradient_accumulation_steps', type=int, default=4, help="Number of gradient accumulation steps, default is 4.")
-    training_group.add_argument('--warmup_steps', type=int, default=5, help="Number of warmup steps, default is 5.")
-    training_group.add_argument('--max_steps', type=int, default=400, help="Maximum number of training steps.")
-    training_group.add_argument('--learning_rate', type=float, default=2e-4, help="Learning rate, default is 2e-4.")
-    training_group.add_argument('--optim', type=str, default="adamw_8bit", help="Optimizer type.")
-    training_group.add_argument('--weight_decay', type=float, default=0.01, help="Weight decay, default is 0.01.")
-    training_group.add_argument('--lr_scheduler_type', type=str, default="linear", help="Learning rate scheduler type, default is 'linear'.")
-    training_group.add_argument('--seed', type=int, default=3407, help="Seed for reproducibility, default is 3407.")
+    training_group = parser.add_argument_group("🎓 Eğitim Seçenekleri")
+    training_group.add_argument('--per_device_train_batch_size', type=int, default=2, help="Eğitim sırasında cihaz başına batch boyutu, varsayılan 2")
+    training_group.add_argument('--gradient_accumulation_steps', type=int, default=4, help="Gradient biriktirme adımları, varsayılan 4")
+    training_group.add_argument('--warmup_steps', type=int, default=5, help="Isınma adımları sayısı, varsayılan 5")
+    training_group.add_argument('--max_steps', type=int, default=400, help="Eğitim adımlarının maksimum sayısı")
+    training_group.add_argument('--learning_rate', type=float, default=2e-4, help="Öğrenme oranı, varsayılan 2e-4")
+    training_group.add_argument('--optim', type=str, default="adamw_8bit", help="Optimizasyon türü")
+    training_group.add_argument('--weight_decay', type=float, default=0.01, help="Ağırlık azalması, varsayılan 0.01")
+    training_group.add_argument('--lr_scheduler_type', type=str, default="linear", help="Öğrenme oranı zamanlayıcı türü, varsayılan 'linear'")
+    training_group.add_argument('--seed', type=int, default=3407, help="Tekrarlanabilirlik için tohum, varsayılan 3407")
     
 
     # Report/Logging arguments
-    report_group = parser.add_argument_group("📊 Report Options")
+    report_group = parser.add_argument_group("📊 Raporlama Seçenekleri")
     report_group.add_argument('--report_to', type=str, default="tensorboard",
         choices=["azure_ml", "clearml", "codecarbon", "comet_ml", "dagshub", "dvclive", "flyte", "mlflow", "neptune", "tensorboard", "wandb", "all", "none"],
-        help="The list of integrations to report the results and logs to. Supported platforms are: \n\t\t 'azure_ml', 'clearml', 'codecarbon', 'comet_ml', 'dagshub', 'dvclive', 'flyte', 'mlflow', 'neptune', 'tensorboard', and 'wandb'. Use 'all' to report to all integrations installed, 'none' for no integrations.")
-    report_group.add_argument('--logging_steps', type=int, default=1, help="Logging steps, default is 1")
+        help="Sonuç ve günlükleri göndereceğiniz entegrasyonların listesi. Desteklenen platformlar: \n\t\t 'azure_ml', 'clearml', 'codecarbon', 'comet_ml', 'dagshub', 'dvclive', 'flyte', 'mlflow', 'neptune', 'tensorboard' ve 'wandb'. Tüm kurulu entegrasyonlara raporlamak için 'all', hiçbiri için 'none' kullanın.")
+    report_group.add_argument('--logging_steps', type=int, default=1, help="Günlükleme adımları, varsayılan 1")
 
     # Saving and pushing arguments
-    save_group = parser.add_argument_group('💾 Save Model Options')
-    save_group.add_argument('--output_dir', type=str, default="outputs", help="Output directory")
-    save_group.add_argument('--save_model', action='store_true', help="Save the model after training")
-    save_group.add_argument('--save_method', type=str, default="merged_16bit", choices=["merged_16bit", "merged_4bit", "lora"], help="Save method for the model, default is 'merged_16bit'")
-    save_group.add_argument('--save_gguf', action='store_true', help="Convert the model to GGUF after training")
-    save_group.add_argument('--save_path', type=str, default="model", help="Path to save the model")
+    save_group = parser.add_argument_group('💾 Model Kaydetme Seçenekleri')
+    save_group.add_argument('--output_dir', type=str, default="outputs", help="Çıktı dizini")
+    save_group.add_argument('--save_model', action='store_true', help="Eğitimden sonra modeli kaydet")
+    save_group.add_argument('--save_method', type=str, default="merged_16bit", choices=["merged_16bit", "merged_4bit", "lora"], help="Modeli kaydetme yöntemi, varsayılan 'merged_16bit'")
+    save_group.add_argument('--save_gguf', action='store_true', help="Eğitimden sonra modeli GGUF'e dönüştür")
+    save_group.add_argument('--save_path', type=str, default="model", help="Modelin kaydedileceği yol")
     save_group.add_argument('--quantization', type=str, default="q8_0", nargs="+",
-        help="Quantization method for saving the model. common values ('f16', 'q4_k_m', 'q8_0'), Check our wiki for all quantization methods https://github.com/unslothai/unsloth/wiki#saving-to-gguf ")
+        help="Modeli kaydederken kullanılacak miktarlandırma yöntemi. yaygın değerler ('f16', 'q4_k_m', 'q8_0'); tüm yöntemler için wiki sayfamıza bakın https://github.com/unslothai/unsloth/wiki#saving-to-gguf")
 
-    push_group = parser.add_argument_group('🚀 Push Model Options')
-    push_group.add_argument('--push_model', action='store_true', help="Push the model to Hugging Face hub after training")
-    push_group.add_argument('--push_gguf', action='store_true', help="Push the model as GGUF to Hugging Face hub after training")
-    push_group.add_argument('--hub_path', type=str, default="hf/model", help="Path on Hugging Face hub to push the model")
-    push_group.add_argument('--hub_token', type=str, help="Token for pushing the model to Hugging Face hub")
+    push_group = parser.add_argument_group('🚀 Modeli Yükleme Seçenekleri')
+    push_group.add_argument('--push_model', action='store_true', help="Eğitimden sonra modeli Hugging Face hub'a yükle")
+    push_group.add_argument('--push_gguf', action='store_true', help="Modeli GGUF olarak Hugging Face hub'a yükle")
+    push_group.add_argument('--hub_path', type=str, default="hf/model", help="Hub'da modeli yüklemek için hedef yol")
+    push_group.add_argument('--hub_token', type=str, help="Hugging Face hub'a yüklemek için gerekli token")
 
     args = parser.parse_args()
     run(args)
