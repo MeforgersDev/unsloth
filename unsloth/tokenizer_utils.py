@@ -371,7 +371,7 @@ def fix_sentencepiece_tokenizer(
         ids = ids[0]
         if (len(ids) != 1):
             # Skip this token!
-            print(f"Skip mapping {old_token} to {new_token} since {new_token} is already in the tokenizer!")
+            print(f"{old_token} -> {new_token} eşlemesi atlandı çünkü {new_token} zaten tokenizer içinde mevcut!")
             continue
         pass
         ids = ids[0]
